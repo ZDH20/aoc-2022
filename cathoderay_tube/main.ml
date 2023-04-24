@@ -7,7 +7,7 @@ let read_whole_file filename =
 let print_list lst =
   List.iter (fun x -> Printf.printf "d: %s\n" x) lst
 
-let try_string_of_int (s: string): int option =
+let try_int_of_string (s: string): int option =
   try Some (int_of_string s)
   with Failure _ -> None
 
@@ -31,7 +31,7 @@ let rec solve (data: string list) (c: int) (x: int) (sum: int): int =
      draw (c + 1) x;
      solve tl (c + 1) x (sum + (check (c + 1) x))
   | hd :: tl ->
-     (match try_string_of_int hd with
+     (match try_int_of_string hd with
       | Some k ->
          draw (c + 1) x;
          draw (c + 2) x;
