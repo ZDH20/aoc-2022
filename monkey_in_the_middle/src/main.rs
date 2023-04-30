@@ -5,11 +5,9 @@ struct Monkey {
     items: Vec<i32>,
     operation: (i32, char, i32),
     div_num: i32,
-    if_true: i32,
-    if_false: i32,
-}
-
-impl Monkey {
+    if_true: usize,
+    if_false: usize,
+    inspections: i32,
 }
 
 fn parse_operation(data: &str) -> (i32, char, i32) {
@@ -20,9 +18,7 @@ fn parse_operation(data: &str) -> (i32, char, i32) {
         }
     };
 
-    let (mut l, mut op, mut r) = (-1, '\0', -1);
-
-    let mut stmnt: String = data
+    let stmnt: String = data
         .split("= ")
         .nth(1)
         .unwrap()
@@ -30,9 +26,9 @@ fn parse_operation(data: &str) -> (i32, char, i32) {
         .collect::<Vec<_>>()
         .join(" ");
 
-    l = parse_group(&stmnt, 0);
-    r = parse_group(&stmnt, 2);
-    op = stmnt
+    let l = parse_group(&stmnt, 0);
+    let r = parse_group(&stmnt, 2);
+    let op = stmnt
         .split(' ')
         .nth(1)
         .unwrap()
@@ -63,15 +59,16 @@ fn parse_monkey(data: &str) -> Monkey {
         .map(|m| m.parse::<i32>().unwrap())
         .collect();
 
-    let operation = parse_operation(parts.next().unwrap());
+    let operation: (i32, char, i32)
+        = parse_operation(parts.next().unwrap());
 
     let div_num: i32 = get_elem(&mut parts, "by ")
         .parse::<i32>()
         .unwrap();
 
-    let (if_true, if_false) = {
-        (get_elem(&mut parts, "monkey ").parse::<i32>().unwrap(),
-         get_elem(&mut parts, "monkey ").parse::<i32>().unwrap())
+    let (if_true, if_false): (usize, usize) = {
+        (get_elem(&mut parts, "monkey ").parse::<usize>().unwrap(),
+         get_elem(&mut parts, "monkey ").parse::<usize>().unwrap())
     };
 
     Monkey {
@@ -80,18 +77,62 @@ fn parse_monkey(data: &str) -> Monkey {
         div_num,
         if_true,
         if_false,
+        inspections: 0,
     }
+}
+
+fn inspect_items(monkey: &mut Monkey) -> Vec<(usize, i32)> {
+    // Monkey, Worry.
+    let mut res: Vec<(usize, i32)> = Vec::new();
+
+    for i in 0..monkey.items.len() {
+        let worry = match monkey.operation {
+            (-1, '*', -1) => monkey.items[i].pow(2),
+            (-1, '+', -1) => monkey.items[i] * 2,
+            (-1, '*', k)  => monkey.items[i] * k,
+            (-1, '+', k)  => monkey.items[i] + k,
+            (k, '*', -1)  => k * monkey.items[i],
+            (k, '+', -1)  => k + monkey.items[i],
+            _ => panic!("unreachable")
+        } / 3;
+        if worry % monkey.div_num == 0 {
+            res.push((monkey.if_true, worry));
+        } else {
+            res.push((monkey.if_false, worry));
+        }
+        monkey.inspections += 1;
+    }
+
+    monkey.items.clear();
+    res
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = fs::read_to_string("input.txt")?;
     let data = data.split("\n\n").collect::<Vec<&str>>();
 
-    let mut monkies = Vec::<Monkey>::new();
+    let mut monkeys = Vec::<Monkey>::new();
 
     for m in data {
-        monkies.push(parse_monkey(m));
+        monkeys.push(parse_monkey(m));
     }
+
+    for _ in 0..1000 {
+        for i in 0..monkeys.len() {
+            let items: Vec<(usize, i32)> = inspect_items(&mut monkeys[i]);
+            for j in 0..items.len() {
+                let throw_to = items[j].0;
+                let value = items[j].1;
+                monkeys[throw_to].items.push(value);
+            }
+        }
+    }
+
+    monkeys.sort_by_key(|monkey| monkey.inspections);
+    monkeys.reverse();
+    println!("{monkey_business}", monkey_business = {
+        monkeys[0].inspections * monkeys[1].inspections
+    });
 
     Ok(())
 }
