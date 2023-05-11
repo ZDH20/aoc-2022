@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs;
 
 #[derive(Debug)]
@@ -99,34 +98,7 @@ fn inspect_items(monkey: &mut Monkey) -> Vec<(usize, i32)> {
     res
 }
 
-fn map_addition(x: HashMap<i32, i32>, y: Option<i32>, ymap: Option<HashMap<i32, i32>>) -> HashMap<i32, i32> {
-    let mut result = x.clone();
-    if let Some(value) = y {
-        for (_, x_val) in result.iter_mut() {
-            *x_val *= value;
-        }
-    } else if let Some(map) = ymap {
-        for (key, y_val) in map.iter() {
-            if let Some(x_val) = result.get_mut(key) {
-                *x_val += y_val;
-            } else {
-                result.insert(*key, *y_val);
-            }
-        }
-    }
-    result
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-    let mut x = HashMap::<i32, i32>::new();
-    x.insert(0, 1);
-    x.insert(1, 2);
-    // let y = HashMap::<i32, i32>::new();
-
-    let res = map_addition(x, Some(19), None);
-    println!("{res:?}");
-
     let data = fs::read_to_string("input.txt")?;
     let data = data.split("\n\n").collect::<Vec<&str>>();
 
