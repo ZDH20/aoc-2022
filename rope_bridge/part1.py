@@ -8,8 +8,8 @@ def distance(x1, y1, x2, y2):
     return math.sqrt(m1 + m2)
 
 
-def move(direction):
-    global head, tail, tail_history, head_history, visited
+def move(head, tail, direction):
+    global tail_history, head_history, visited
 
     head_history.append([head[0], head[1]])
     tail_history.append([tail[0], tail[1]])
@@ -49,7 +49,7 @@ for entry in data.split('\n'):
     except:
         break
     for _ in range(0, int(steps)):
-        move(direction)
+        move(head, tail, direction)
 
 print(len(visited))
 
